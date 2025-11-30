@@ -12,6 +12,8 @@ gem "puma", ">= 5.0"
 gem "image_processing", "~> 1.2"
 # Use Action Text for rich text content
 gem "actiontext", "~> 8.1"
+# Convert HTML to Markdown
+gem "reverse_markdown"
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem "tzinfo-data", platforms: %i[ windows jruby ]

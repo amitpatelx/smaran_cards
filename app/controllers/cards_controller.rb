@@ -4,6 +4,10 @@ class CardsController < ApplicationController
   # GET /cards
   def index
     @cards = Card.all
+    respond_to do |format|
+      format.html
+      format.json { render json: { cards: @cards.map(&:to_json_export) } }
+    end
   end
 
   # GET /cards/1

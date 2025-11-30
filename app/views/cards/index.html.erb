@@ -2,7 +2,10 @@
 
 <div class="header-actions">
   <h1>Flash Cards</h1>
-  <%= link_to "New Card", new_card_path, class: "btn btn-primary" %>
+  <div>
+    <%= link_to "New Card", new_card_path, class: "btn btn-primary" %>
+    <%= link_to "Download as JSON", cards_path(format: :json), class: "btn btn-secondary", download: "cards.json" %>
+  </div>
 </div>
 
 <div class="card-grid">

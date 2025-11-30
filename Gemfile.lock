@@ -208,6 +208,8 @@ GEM
       tsort
     reline (0.6.3)
       io-console (~> 0.5)
+    reverse_markdown (3.0.0)
+      nokogiri
     ruby-vips (2.2.5)
       ffi (~> 1.12)
       logger
@@ -252,6 +254,7 @@ DEPENDENCIES
   propshaft
   puma (>= 5.0)
   rails (~> 8.1.1)
+  reverse_markdown
   sqlite3 (>= 2.1)
   tzinfo-data
 
