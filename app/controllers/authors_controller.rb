@@ -41,8 +41,11 @@ class AuthorsController < ApplicationController
 
   # DELETE /authors/1
   def destroy
-    @author.destroy!
-    redirect_to authors_path, notice: "Author was successfully destroyed.", status: :see_other
+    if @author.destroy
+      redirect_to authors_path, notice: "Author was successfully deleted.", status: :see_other
+    else
+      redirect_to authors_path, alert: "Cannot delete author: #{@author.errors.full_messages.join(', ')}", status: :see_other
+    end
   end
 
   private

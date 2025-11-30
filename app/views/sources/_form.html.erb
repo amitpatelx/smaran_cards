@@ -1,8 +1,7 @@
 <%= form_with(model: source) do |form| %>
   <% if source.errors.any? %>
-    <div style="color: red">
+    <div class="error-messages">
       <h2><%= pluralize(source.errors.count, "error") %> prohibited this source from being saved:</h2>
-
       <ul>
         <% source.errors.each do |error| %>
           <li><%= error.full_message %></li>
@@ -12,21 +11,22 @@
   <% end %>
 
   <div>
-    <%= form.label :title, style: "display: block" %>
-    <%= form.text_field :title %>
+    <%= form.label :title %>
+    <%= form.text_field :title, required: true %>
   </div>
 
   <div>
-    <%= form.label :description, style: "display: block" %>
-    <%= form.textarea :description %>
+    <%= form.label :description %>
+    <%= form.text_area :description, rows: 5 %>
   </div>
 
   <div>
-    <%= form.label :url, style: "display: block" %>
-    <%= form.text_field :url %>
+    <%= form.label :url %>
+    <%= form.text_field :url, placeholder: "https://example.com" %>
   </div>
 
   <div>
-    <%= form.submit %>
+    <%= form.submit class: "btn btn-primary" %>
+    <%= link_to "Cancel", sources_path, class: "btn btn-secondary" %>
   </div>
 <% end %>

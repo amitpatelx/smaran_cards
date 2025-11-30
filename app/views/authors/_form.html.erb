@@ -1,8 +1,7 @@
 <%= form_with(model: author) do |form| %>
   <% if author.errors.any? %>
-    <div style="color: red">
+    <div class="error-messages">
       <h2><%= pluralize(author.errors.count, "error") %> prohibited this author from being saved:</h2>
-
       <ul>
         <% author.errors.each do |error| %>
           <li><%= error.full_message %></li>
@@ -12,16 +11,17 @@
   <% end %>
 
   <div>
-    <%= form.label :name, style: "display: block" %>
-    <%= form.text_field :name %>
+    <%= form.label :name %>
+    <%= form.text_field :name, required: true %>
   </div>
 
   <div>
-    <%= form.label :bio, style: "display: block" %>
-    <%= form.textarea :bio %>
+    <%= form.label :bio %>
+    <%= form.text_area :bio, rows: 5 %>
   </div>
 
   <div>
-    <%= form.submit %>
+    <%= form.submit class: "btn btn-primary" %>
+    <%= link_to "Cancel", authors_path, class: "btn btn-secondary" %>
   </div>
 <% end %>

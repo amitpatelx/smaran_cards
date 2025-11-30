@@ -1,10 +1,29 @@
-<p style="color: green"><%= notice %></p>
+<% content_for :title, "Source Details" %>
 
-<%= render @source %>
-
-<div>
-  <%= link_to "Edit this source", edit_source_path(@source) %> |
-  <%= link_to "Back to sources", sources_path %>
-
-  <%= button_to "Destroy this source", @source, method: :delete %>
+<div class="show-card">
+  <h2 style="margin-bottom: 1rem;"><%= @source.title %></h2>
+  
+  <% if @source.description.present? %>
+    <div style="margin-bottom: 1rem;">
+      <strong>Description:</strong>
+      <p style="margin-top: 0.5rem; color: var(--gray-700);"><%= @source.description %></p>
+    </div>
+  <% end %>
+  
+  <% if @source.url.present? %>
+    <div>
+      <strong>URL:</strong>
+      <p style="margin-top: 0.5rem;">
+        <a href="<%= @source.url %>" target="_blank" style="color: var(--primary); text-decoration: none;">
+          <%= @source.url %> ↗
+        </a>
+      </p>
+    </div>
+  <% end %>
+  
+  <div class="actions">
+    <%= link_to "Edit", edit_source_path(@source), class: "btn btn-primary" %>
+    <%= link_to "Back to sources", sources_path, class: "btn btn-secondary" %>
+    <%= button_to "Delete", @source, method: :delete, class: "btn btn-danger", data: { turbo_confirm: "Are you sure you want to delete this source?" } %>
+  </div>
 </div>

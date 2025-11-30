@@ -41,8 +41,11 @@ class SourcesController < ApplicationController
 
   # DELETE /sources/1
   def destroy
-    @source.destroy!
-    redirect_to sources_path, notice: "Source was successfully destroyed.", status: :see_other
+    if @source.destroy
+      redirect_to sources_path, notice: "Source was successfully deleted.", status: :see_other
+    else
+      redirect_to sources_path, alert: "Cannot delete source: #{@source.errors.full_messages.join(', ')}", status: :see_other
+    end
   end
 
   private

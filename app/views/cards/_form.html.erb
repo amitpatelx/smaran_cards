@@ -1,8 +1,7 @@
 <%= form_with(model: card) do |form| %>
   <% if card.errors.any? %>
-    <div style="color: red">
+    <div class="error-messages">
       <h2><%= pluralize(card.errors.count, "error") %> prohibited this card from being saved:</h2>
-
       <ul>
         <% card.errors.each do |error| %>
           <li><%= error.full_message %></li>
@@ -12,26 +11,27 @@
   <% end %>
 
   <div>
-    <%= form.label :quote, style: "display: block" %>
-    <%= form.rich_text_area :quote %>
+    <%= form.label :quote %>
+    <%= form.rich_text_area :quote, required: true %>
   </div>
 
   <div>
-    <%= form.label :commentary, style: "display: block" %>
+    <%= form.label :commentary %>
     <%= form.rich_text_area :commentary %>
   </div>
 
   <div>
-    <%= form.label :author_id, style: "display: block" %>
-    <%= form.collection_select :author_id, Author.all, :id, :name, { include_blank: "None" } %>
+    <%= form.label :author %>
+    <%= form.collection_select :author_id, Author.all, :id, :name, { include_blank: "Select an author (optional)" } %>
   </div>
 
   <div>
-    <%= form.label :source_id, style: "display: block" %>
-    <%= form.collection_select :source_id, Source.all, :id, :title, { include_blank: "None" } %>
+    <%= form.label :source %>
+    <%= form.collection_select :source_id, Source.all, :id, :title, { include_blank: "Select a source (optional)" } %>
   </div>
 
   <div>
-    <%= form.submit %>
+    <%= form.submit class: "btn btn-primary" %>
+    <%= link_to "Cancel", cards_path, class: "btn btn-secondary" %>
   </div>
 <% end %>

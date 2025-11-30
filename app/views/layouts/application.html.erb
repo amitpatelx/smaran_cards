@@ -22,9 +22,30 @@
     <%= stylesheet_link_tag :app %>
     <link rel="stylesheet" href="https://unpkg.com/trix@2.0.8/dist/trix.css">
     <script src="https://unpkg.com/trix@2.0.8/dist/trix.umd.min.js"></script>
+    <script type="module">
+      import * as Turbo from 'https://cdn.jsdelivr.net/npm/@hotwired/turbo@8.0.4/+esm'
+    </script>
   </head>
 
   <body>
-    <%= yield %>
+    <nav>
+      <div class="container">
+        <h1>📚 Smaran Cards</h1>
+        <div class="nav-links">
+          <%= link_to "Cards", cards_path %>
+          <%= link_to "Authors", authors_path %>
+          <%= link_to "Sources", sources_path %>
+        </div>
+      </div>
+    </nav>
+    <div class="container">
+      <% if notice %>
+        <div class="notice"><%= notice %></div>
+      <% end %>
+      <% if alert %>
+        <div class="error-messages"><%= alert %></div>
+      <% end %>
+      <%= yield %>
+    </div>
   </body>
 </html>

@@ -1,16 +1,23 @@
-<p style="color: green"><%= notice %></p>
-
 <% content_for :title, "Authors" %>
 
-<h1>Authors</h1>
+<div class="header-actions">
+  <h1>Authors</h1>
+  <%= link_to "New Author", new_author_path, class: "btn btn-primary" %>
+</div>
 
-<div id="authors">
+<div class="card-grid">
   <% @authors.each do |author| %>
-    <%= render author %>
-    <p>
-      <%= link_to "Show this author", author %>
-    </p>
+    <div class="card">
+      <h3 style="margin-bottom: 0.5rem; color: var(--gray-900);"><%= author.name %></h3>
+      <% if author.bio.present? %>
+        <p style="color: var(--gray-600); margin-bottom: 1rem;"><%= author.bio %></p>
+      <% end %>
+      <div class="actions">
+        <%= link_to "Show", author, class: "btn btn-primary" %>
+        <%= link_to "Edit", edit_author_path(author), class: "btn btn-secondary" %>
+        <%= button_to "Delete", author, method: :delete, class: "btn btn-danger", data: { turbo_confirm: "Are you sure you want to delete this author?" } %>
+      </div>
+    </div>
   <% end %>
 </div>
 
-<%= link_to "New author", new_author_path %>
