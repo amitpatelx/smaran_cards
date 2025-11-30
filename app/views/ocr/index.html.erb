@@ -1,0 +1,551 @@
+<% content_for :title, "OCR Text Extraction" %>
+<% content_for :head do %>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1/dist/tesseract.min.js"></script>
+<% end %>
+
+<div class="ocr-container">
+  <h1>OCR Text Extraction</h1>
+  
+  <div class="ocr-panel">
+    <div class="ocr-controls">
+      <div class="form-group">
+        <label for="imageLoader">Select Image:</label>
+        <input type="file" id="imageLoader" accept="image/*" class="file-input">
+        <span class="file-info" id="fileName"></span>
+      </div>
+
+      <div class="form-group">
+        <label for="langSelect">Select Language:</label>
+        <select id="langSelect" class="form-control">
+          <option value="hin">Hindi (हिन्दी)</option>
+          <option value="guj">Gujarati (ગુજરાતી)</option>
+          <option value="tam">Tamil (தமிழ்)</option>
+          <option value="tel">Telugu (తెలుగు)</option>
+          <option value="kan">Kannada (ಕನ್ನಡ)</option>
+          <option value="mal">Malayalam (മലയാളം)</option>
+          <option value="ori">Odia (ଓଡ଼ିଆ)</option>
+          <option value="pan">Punjabi (ਪੰਜਾਬੀ)</option>
+          <option value="ben">Bengali (বাংলা)</option>
+          <option value="mar">Marathi (मराठी)</option>
+          <option value="eng">English</option>
+          <option value="fra">French</option>
+          <option value="deu">German</option>
+        </select>
+      </div>
+
+      <div class="button-group">
+        <button id="extractText" class="btn btn-primary" disabled>Extract Text</button>
+        <button id="clearImage" class="btn btn-secondary">Clear Image</button>
+      </div>
+    </div>
+
+    <div class="canvas-wrapper">
+      <canvas id="imageCanvas" class="ocr-canvas"></canvas>
+      <div id="canvasPlaceholder" class="canvas-placeholder">
+        <p>Image will appear here</p>
+      </div>
+      <div id="debugInfo" style="position: absolute; top: 5px; left: 5px; background: rgba(0,0,0,0.7); color: #0f0; font-family: monospace; font-size: 12px; padding: 5px; border-radius: 3px; display: none; z-index: 1000;">
+        <div>X: <span id="debugX">0</span></div>
+        <div>Y: <span id="debugY">0</span></div>
+        <div>CX: <span id="debugCX">0</span></div>
+        <div>CY: <span id="debugCY">0</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ocr-output-section">
+    <div class="output-header">
+      <h2>Extracted Text</h2>
+      <div class="output-actions">
+        <button id="copyText" class="btn btn-secondary" disabled>Copy to Clipboard</button>
+        <button id="clearText" class="btn btn-secondary" disabled>Clear Text</button>
+      </div>
+    </div>
+    <div id="output" class="ocr-output">
+      <p class="placeholder-text">OCR output will appear here after extraction...</p>
+    </div>
+    <div id="progressBar" class="progress-bar hidden">
+      <div class="progress-fill"></div>
+      <span class="progress-text">Processing...</span>
+    </div>
+  </div>
+</div>
+
+<style>
+.ocr-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.ocr-panel {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 2rem;
+  margin-bottom: 2rem;
+  background: white;
+  padding: 2rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.ocr-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group label {
+  font-weight: 500;
+  color: var(--gray-700);
+  font-size: 0.875rem;
+}
+
+.file-input {
+  padding: 0.625rem;
+  border: 2px solid var(--gray-300);
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.file-input:hover {
+  border-color: var(--primary);
+}
+
+.file-info {
+  font-size: 0.75rem;
+  color: var(--gray-600);
+  margin-top: 0.25rem;
+}
+
+.form-control {
+  padding: 0.625rem;
+  border: 1px solid var(--gray-300);
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-family: inherit;
+  background: white;
+  cursor: pointer;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.button-group {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.button-group .btn {
+  flex: 1;
+  min-width: 120px;
+}
+
+.canvas-wrapper {
+  position: relative;
+  background: var(--gray-100);
+  border-radius: 0.375rem;
+  overflow: auto;
+  max-height: 600px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+}
+
+.ocr-canvas {
+  display: none;
+  max-width: 100%;
+  height: auto;
+  cursor: crosshair;
+  border: 2px solid var(--primary);
+}
+
+.ocr-canvas.visible {
+  display: block;
+  width: 100%;
+}
+
+.canvas-placeholder {
+  text-align: center;
+  color: var(--gray-600);
+  padding: 2rem;
+  width: 100%;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.canvas-placeholder.hidden {
+  display: none;
+}
+
+.canvas-placeholder p {
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+.ocr-output-section {
+  background: white;
+  padding: 2rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.output-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.output-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.output-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.output-actions .btn {
+  white-space: nowrap;
+}
+
+.ocr-output {
+  background: var(--gray-50);
+  padding: 1.5rem;
+  border-radius: 0.375rem;
+  border: 1px solid var(--gray-200);
+  min-height: 150px;
+  max-height: 400px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  font-family: 'Segoe UI', 'Helvetica Neue', sans-serif;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--gray-900);
+}
+
+.ocr-output.empty {
+  color: var(--gray-600);
+  font-style: italic;
+}
+
+.placeholder-text {
+  color: var(--gray-500);
+  margin: 0;
+}
+
+.progress-bar {
+  margin-top: 1rem;
+  height: 6px;
+  background: var(--gray-200);
+  border-radius: 3px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+}
+
+.progress-bar.hidden {
+  display: none;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--primary);
+  width: 0%;
+  animation: pulse 1.5s infinite;
+}
+
+.progress-text {
+  font-size: 0.75rem;
+  color: var(--gray-600);
+  margin-left: 0.5rem;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn:disabled:hover {
+  background: inherit;
+  color: inherit;
+}
+
+@media (max-width: 768px) {
+  .ocr-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .output-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .output-actions {
+    width: 100%;
+  }
+
+  .output-actions .btn {
+    flex: 1;
+  }
+
+  .button-group {
+    gap: 0.25rem;
+  }
+
+  .button-group .btn {
+    min-width: 100px;
+    font-size: 0.75rem;
+    padding: 0.5rem 0.75rem;
+  }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const canvas = document.getElementById('imageCanvas');
+  const ctx = canvas.getContext('2d');
+  const output = document.getElementById('output');
+  const imageLoader = document.getElementById('imageLoader');
+  const langSelect = document.getElementById('langSelect');
+  const extractBtn = document.getElementById('extractText');
+  const clearImageBtn = document.getElementById('clearImage');
+  const copyBtn = document.getElementById('copyText');
+  const clearTextBtn = document.getElementById('clearText');
+  const progressBar = document.getElementById('progressBar');
+  const canvasPlaceholder = document.querySelector('.canvas-placeholder');
+  const fileNameSpan = document.getElementById('fileName');
+  const debugInfo = document.getElementById('debugInfo');
+  
+  let img = new Image();
+  let selectedRegion = null;
+  let isDrawing = false;
+
+  imageLoader.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    fileNameSpan.textContent = file.name;
+
+    const reader = new FileReader();
+    reader.onload = function(event) {
+      img.onload = () => {
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx.drawImage(img, 0, 0);
+        canvas.classList.add('visible');
+        canvasPlaceholder.classList.add('hidden');
+        extractBtn.disabled = false;
+        selectedRegion = null;
+      };
+      img.src = event.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  canvas.addEventListener('mousedown', e => {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    selectedRegion = {
+      startX: (e.clientX - rect.left) * scaleX,
+      startY: (e.clientY - rect.top) * scaleY
+    };
+    isDrawing = true;
+  });
+
+  canvas.addEventListener('mousemove', e => {
+    if (!selectedRegion && !isDrawing) {
+      // Show debug info on all moves
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      debugInfo.style.display = 'block';
+      debugInfo.querySelector('#debugX').textContent = Math.round((e.clientX - rect.left) * scaleX);
+      debugInfo.querySelector('#debugY').textContent = Math.round((e.clientY - rect.top) * scaleY);
+      debugInfo.querySelector('#debugCX').textContent = Math.round(scaleX * 100) + '%';
+      debugInfo.querySelector('#debugCY').textContent = Math.round(scaleY * 100) + '%';
+      return;
+    }
+
+    if (!isDrawing) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const endX = (e.clientX - rect.left) * scaleX;
+    const endY = (e.clientY - rect.top) * scaleY;
+
+    debugInfo.style.display = 'block';
+    debugInfo.querySelector('#debugX').textContent = Math.round(endX);
+    debugInfo.querySelector('#debugY').textContent = Math.round(endY);
+    debugInfo.querySelector('#debugCX').textContent = 'SX:' + Math.round(scaleX * 100) + '%';
+    debugInfo.querySelector('#debugCY').textContent = 'SY:' + Math.round(scaleY * 100) + '%';
+
+    ctx.drawImage(img, 0, 0);
+    ctx.strokeStyle = 'rgba(79, 70, 229, 0.6)';
+    ctx.lineWidth = 2;
+    ctx.fillStyle = 'rgba(79, 70, 229, 0.1)';
+
+    const width = endX - selectedRegion.startX;
+    const height = endY - selectedRegion.startY;
+
+    if (width !== 0 && height !== 0) {
+      ctx.fillRect(selectedRegion.startX, selectedRegion.startY, width, height);
+      ctx.strokeRect(selectedRegion.startX, selectedRegion.startY, width, height);
+    }
+  });
+
+  canvas.addEventListener('mouseup', e => {
+    if (!selectedRegion || !isDrawing) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    selectedRegion.endX = (e.clientX - rect.left) * scaleX;
+    selectedRegion.endY = (e.clientY - rect.top) * scaleY;
+    isDrawing = false;
+    
+    // Draw final selection with different styling
+    ctx.drawImage(img, 0, 0);
+    ctx.strokeStyle = 'rgba(79, 70, 229, 0.8)';
+    ctx.lineWidth = 2;
+    ctx.fillStyle = 'rgba(79, 70, 229, 0.15)';
+    
+    const width = selectedRegion.endX - selectedRegion.startX;
+    const height = selectedRegion.endY - selectedRegion.startY;
+    
+    if (width !== 0 && height !== 0) {
+      ctx.fillRect(selectedRegion.startX, selectedRegion.startY, width, height);
+      ctx.strokeRect(selectedRegion.startX, selectedRegion.startY, width, height);
+    }
+  });
+
+  extractBtn.addEventListener('click', async () => {
+    if (!selectedRegion || selectedRegion.endX === undefined) {
+      alert('Please select a region on the image by clicking and dragging.');
+      return;
+    }
+
+    const width = Math.abs(selectedRegion.endX - selectedRegion.startX);
+    const height = Math.abs(selectedRegion.endY - selectedRegion.startY);
+
+    if (width < 10 || height < 10) {
+      alert('Please select a larger region.');
+      return;
+    }
+
+    const startX = Math.min(selectedRegion.startX, selectedRegion.endX);
+    const startY = Math.min(selectedRegion.startY, selectedRegion.endY);
+
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = width;
+    tempCanvas.height = height;
+    const tempCtx = tempCanvas.getContext('2d');
+    tempCtx.drawImage(canvas, startX, startY, width, height, 0, 0, width, height);
+
+    const lang = langSelect.value;
+    showProgress(true);
+    extractBtn.disabled = true;
+
+    try {
+      const result = await Tesseract.recognize(
+        tempCanvas,
+        lang,
+        {
+          logger: m => {
+            if (m.status === 'recognizing') {
+              const progress = Math.round(m.progress * 100);
+              updateProgress(progress);
+            }
+          }
+        }
+      );
+
+      const text = result.data.text || '[No text recognized]';
+      output.textContent = text;
+      output.classList.remove('empty');
+      copyBtn.disabled = false;
+      clearTextBtn.disabled = false;
+    } catch (err) {
+      console.error(err);
+      output.textContent = 'Error during OCR: ' + err.message;
+      output.classList.add('empty');
+    } finally {
+      showProgress(false);
+      extractBtn.disabled = false;
+    }
+  });
+
+  clearImageBtn.addEventListener('click', () => {
+    imageLoader.value = '';
+    canvas.classList.remove('visible');
+    canvasPlaceholder.classList.remove('hidden');
+    fileNameSpan.textContent = '';
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    selectedRegion = null;
+    extractBtn.disabled = true;
+  });
+
+  clearTextBtn.addEventListener('click', () => {
+    output.textContent = 'OCR output will appear here after extraction...';
+    output.classList.add('empty');
+    copyBtn.disabled = true;
+    clearTextBtn.disabled = true;
+  });
+
+  copyBtn.addEventListener('click', async () => {
+    const text = output.textContent;
+    if (!text || text.includes('OCR output will appear')) {
+      alert('No text to copy.');
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(text);
+      const originalText = copyBtn.textContent;
+      copyBtn.textContent = 'Copied!';
+      setTimeout(() => {
+        copyBtn.textContent = originalText;
+      }, 2000);
+    } catch (err) {
+      alert('Copy failed: ' + err.message);
+    }
+  });
+
+  function showProgress(show) {
+    progressBar.classList.toggle('hidden', !show);
+  }
+
+  function updateProgress(progress) {
+    const fill = progressBar.querySelector('.progress-fill');
+    const text = progressBar.querySelector('.progress-text');
+    fill.style.width = progress + '%';
+    text.textContent = 'Processing... ' + progress + '%';
+  }
+});
+</script>

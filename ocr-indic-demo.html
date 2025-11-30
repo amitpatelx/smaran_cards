@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>OCR Indic Language - Area Selection</title>
+  <style>
+    body { font-family: sans-serif; margin: 20px; }
+    canvas { border: 1px solid #ccc; margin-top: 10px; }
+    #output { margin-top: 20px; white-space: pre-wrap; background: #f0f0f0; padding: 10px; }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1/dist/tesseract.min.js"></script>
+</head>
+<body>
+
+  <h2>OCR Indic Language (Tesseract.js)</h2>
+
+  <label>Select Image: <input type="file" id="imageLoader" accept="image/*" /></label><br/><br/>
+  <label>Select Language:
+    <select id="langSelect">
+      <option value="hin">Hindi</option>
+      <option value="guj">Gujarati</option>
+      <option value="eng">English</option>
+    </select>
+  </label><br/><br/>
+
+  <canvas id="imageCanvas"></canvas><br/>
+  <br/>
+  <button id="extractText">Extract Text</button>
+  <button id="clearText">Clear Text</button>
+  <button id="copyText">Copy to Clipboard</button>
+
+
+  <div id="output">OCR Output will appear here...</div>
+
+  <script>
+  const canvas = document.getElementById('imageCanvas');
+  const ctx = canvas.getContext('2d');
+  const output = document.getElementById('output');
+  let img = new Image();
+  let startX, startY, endX, endY, isSelecting = false;
+
+  document.getElementById('imageLoader').addEventListener('change', function(e) {
+    const reader = new FileReader();
+    reader.onload = function(event) {
+      img.onload = () => {
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx.drawImage(img, 0, 0);
+      };
+      img.src = event.target.result;
+    };
+    reader.readAsDataURL(e.target.files[0]);
+  });
+
+  canvas.addEventListener('mousedown', e => {
+    startX = e.offsetX;
+    startY = e.offsetY;
+    isSelecting = true;
+  });
+
+  canvas.addEventListener('mousemove', e => {
+    if (isSelecting) {
+      endX = e.offsetX;
+      endY = e.offsetY;
+      drawSelectionLive();
+    }
+  });
+
+  canvas.addEventListener('mouseup', e => {
+    isSelecting = false;
+    endX = e.offsetX;
+    endY = e.offsetY;
+    drawFinalSelection();
+  });
+
+  function drawSelectionLive() {
+    const width = endX - startX;
+    const height = endY - startY;
+    ctx.drawImage(img, 0, 0);
+    ctx.strokeStyle = "rgba(255, 0, 0, 0.6)";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(startX, startY, width, height);
+  }
+
+  function drawFinalSelection() {
+    drawSelectionLive(); // Just finalize the visual
+  }
+
+  document.getElementById('extractText').addEventListener('click', () => {
+    if (startX === undefined || endX === undefined) {
+      alert("Please select a region on the image first.");
+      return;
+    }
+
+    const width = endX - startX;
+    const height = endY - startY;
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = width;
+    tempCanvas.height = height;
+    const tempCtx = tempCanvas.getContext('2d');
+    tempCtx.drawImage(canvas, startX, startY, width, height, 0, 0, width, height);
+
+    const lang = document.getElementById('langSelect').value;
+    output.textContent = "Recognizing text... Please wait.";
+
+    Tesseract.recognize(
+      tempCanvas,
+      lang,
+      {
+        logger: m => console.log(m)
+      }
+    ).then(({ data: { text } }) => {
+      output.textContent = text || "[No text recognized]";
+    }).catch(err => {
+      console.error(err);
+      output.textContent = "Error during OCR: " + err.message;
+    });
+  });
+
+  document.getElementById('clearText').addEventListener('click', () => {
+    output.textContent = '';
+  });
+
+  document.getElementById('copyText').addEventListener('click', async () => {
+    const text = output.textContent;
+    if (!text) return alert("No text to copy.");
+    try {
+      await navigator.clipboard.writeText(text);
+      alert("Copied to clipboard!");
+    } catch (err) {
+      alert("Copy failed: " + err.message);
+    }
+  });
+</script>
+
+
+</body>
+</html>
