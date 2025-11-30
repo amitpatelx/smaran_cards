@@ -1,0 +1,22 @@
+<div id="<%= dom_id card %>">
+  <div>
+    <strong>Quote:</strong>
+    <%= card.quote %>
+  </div>
+
+  <div>
+    <strong>Commentary:</strong>
+    <%= card.commentary %>
+  </div>
+
+  <div>
+    <strong>Author:</strong>
+    <%= card.author&.name %>
+  </div>
+
+  <div>
+    <strong>Source:</strong>
+    <%= card.source&.title %>
+  </div>
+
+</div>
