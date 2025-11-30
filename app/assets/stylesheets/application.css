@@ -62,6 +62,18 @@ nav h1 {
   font-weight: 700;
 }
 
+.nav-brand {
+  font-size: 1.5rem;
+  color: var(--primary);
+  font-weight: 700;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.nav-brand:hover {
+  color: var(--primary-dark);
+}
+
 nav .nav-links {
   display: flex;
   gap: 1.5rem;
